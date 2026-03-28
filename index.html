@@ -165,86 +165,14 @@ g.cssCareerFeat > text
 
 function test_print_organized_novels_list_in_svg()
 {
-   let a_boxes = [];
-   let a_links = [];
+   let starting_position = {};
+   starting_position.x = 400;
+   starting_position.y = 75;
 
-   const novels_map = list_to_map(g_novels_list, "name");
-
-   //alert(JSON.stringify(novels_map));
-
-   const start_x = 400;
-   const size_x = 250;
-   const start_y = 75;
-   const text_why_size_y = 43;
-   const block_why_size_y = text_why_size_y + 7;
-   const elbow_y = 20;
-   const size_y = g_series_height + block_why_size_y + elbow_y;
-
-   for(let y = 0; y < g_novels_organization.length; ++y)
-   {
-      for(let x = 0; x < g_novels_organization[y].length; ++x)
-      {
-         let item_name = g_novels_organization[y][x];
-         
-         if(item_name != null)
-         {
-            const item = novels_map[item_name];
-            
-            let position = {};
-            position.x = (x - 1) * size_x + start_x;
-            position.y = y * size_y + start_y;
-
-            //alert(`${x},${y}|${position.x},${position.y}:${item_name}`);
-
-            const series_svg = draw_one_series_in_svg(item, position);
-            a_boxes.push(series_svg);
-
-            if(y > 0)
-            {
-               const why_text_svg = create_svg_foreign_object(position.x, (position.y - ((text_why_size_y + g_series_height) / 2)), size_x, text_why_size_y, item.why, "cssWhy");
-               a_boxes.push(why_text_svg);
-            }
-
-            const line_start_x = start_x;
-            const line_start_y = start_y;
-
-            const elbow_to_end_y = (g_series_height / 2) + block_why_size_y;
-
-            const line_first_elbow_x = line_start_x;
-            const line_first_elbow_y = position.y - elbow_to_end_y;
-
-            const line_second_elbow_x = position.x;
-            const line_second_elbow_y = line_first_elbow_y;
-
-            const line_end_x = line_second_elbow_x;
-            const line_end_y = position.y;
-
-/*
-            a_links.push(`<polyline class="cssArrow" points="`
-               , `${line_start_x},${line_start_y} `
-               , `${line_first_elbow_x},${line_first_elbow_y} `
-               , `${line_second_elbow_x},${line_second_elbow_y} `
-               , `${line_end_x},${line_end_y} `
-               , `" />`);
-*/  
-
-            if(y > 0)
-            {
-               //alert(`${line_start_x},${line_start_y} -> ${line_first_elbow_x},${line_first_elbow_y}`);
-               //alert(`${line_first_elbow_x},${line_first_elbow_y} -> ${line_second_elbow_x},${line_second_elbow_y}`);
-
-               a_links.push(`<line class="cssArrow" x1="${line_start_x}" y1="${line_start_y}" x2="${line_first_elbow_x}" y2="${line_first_elbow_y}" />`);
-
-               a_links.push(`<line class="cssArrow" x1="${line_first_elbow_x}" y1="${line_first_elbow_y}" x2="${line_second_elbow_x}" y2="${line_second_elbow_y}" />`);
-
-               a_links.push(`<line class="cssArrow" x1="${line_second_elbow_x}" y1="${line_second_elbow_y}" x2="${line_end_x}" y2="${line_end_y}" />`);
-            }
-         }
-      }
-   }
+   const organized_series_svg = draw_organized_series_in_svg(starting_position);
 
    let svg_output = id("ID_svg_output");
-   svg_output.innerHTML += a_links.join("") + a_boxes.join("");
+   svg_output.innerHTML += organized_series_svg;
 }
 
 window.addEventListener("load", (event) => {
