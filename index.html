@@ -1,0 +1,344 @@
+<html>
+<head>
+<link rel="icon" type="image/webp" href="./images/add2_ambpersand_logo.webp" />
+<meta charset="utf-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<title>Paercebal's Dragonlance: Apostasy</title>
+<script src="./js/scripts.js"></script>
+<script src="./json/novels_list.js"></script>
+<script src="./json/novels_organization.js"></script>
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<h1>Dragonlance Books View</h1>
+
+
+
+<div id="ID_output">
+</div>
+
+<center>
+
+<svg id="ID_svg_output"
+      width="850" height="800"
+      version="1.1" xmlns="http://www.w3.org/2000/svg">
+
+   <defs>
+      <filter id="ID_BackgroundShadow">
+         <feDropShadow dx="2" dy="2" stdDeviation="0.2" />
+      </filter>
+<filter id="dropshadow" height="130%">
+  <feGaussianBlur in="SourceAlpha" stdDeviation="3"/> <!-- stdDeviation is how much to blur -->
+  <feOffset dx="0" dy="0" result="offsetblur"/> <!-- how much to offset -->
+  <feComponentTransfer>
+    <feFuncA type="linear" slope="0.95"/> <!-- slope is the opacity of the shadow -->
+  </feComponentTransfer>
+  <feMerge> 
+    <feMergeNode/> <!-- this contains the offset blurred image -->
+    <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+  </feMerge>
+</filter>
+      <style><![CDATA[
+
+.cssWhy
+{
+   font-size : 75%;
+   text-align : center;
+   background : #FFFFFFA0;
+}
+
+.cssBackground
+{
+   fill: #CCCCCC;
+   paint-order: stroke;
+}
+
+rect.cssSeries
+{
+   stroke: #000000;
+   stroke-width: 3px;
+   fill: #FFFFFF;
+   paint-order: stroke;
+}
+
+text.cssSeries, text.cssSeriesShadow
+, tspan.cssSeries, tspan.cssSeriesShadow
+{
+   fill: #000000;
+   text-anchor: middle;
+   dominant-baseline: middle;
+   alignment-baseline: middle;
+   font-size: 15px;
+}
+
+text.cssSeriesShadow
+, tspan.cssSeriesShadow
+{
+   fill: #FFFFFF;
+   /*filter: blur(0.2em);*/
+   filter: url(#dropshadow)
+}
+
+
+
+
+
+g.cssCareerItem > rect
+{
+   stroke: #000000;
+   stroke-width: 3px;
+   fill: #FFFFFF;
+   paint-order: stroke;
+   filter: drop-shadow( 10px 10px 10px rgba(50, 0, 0, .5));
+}
+
+g.cssCareerItem > text
+, g.cssCareerItem tspan
+{
+   fill: #000000;
+   text-anchor: middle;
+   dominant-baseline: middle;
+   alignment-baseline: middle;
+   font-size: 15px;
+   filter: drop-shadow( 1px 1px 10px rgba(0, 0, 0, 1));
+}
+
+g.cssCareerTitle > rect
+{
+   stroke-width: 10px;
+}
+
+g.cssCareerRoot > rect
+{
+   stroke-width: 6px;
+}
+
+g.cssCareerFeat > rect
+{
+}
+
+g.cssCareerTitle > text
+, g.cssCareerTitle tspan
+
+{
+   font-size: 25px;
+}
+
+g.cssCareerRoot > text
+, g.cssCareerRoot tspan
+
+{
+}
+
+g.cssCareerFeat > text
+, g.cssCareerFeat tspan
+{
+}
+
+.cssArrow
+{
+   stroke: #000000;
+   stroke-width: 3px;
+   stroke-linecap: round;
+   stroke-linejoin: round;
+}
+
+
+      ]]></style>
+   </defs>
+
+
+</svg>
+
+</center>
+
+<script>
+
+function test_print_organized_novels_list_in_svg()
+{
+   let a_boxes = [];
+   let a_links = [];
+   const list_to_map = (p_novels_list) =>
+      {
+         let map = {};
+
+         p_novels_list.forEach(
+               (p_item) =>
+               {
+                  map[p_item.name] = p_item;
+               }
+            );
+
+         return map;
+      };
+
+   const novels_map = list_to_map(g_novels_list);
+
+   //alert(JSON.stringify(novels_map));
+
+   const start_x = 400;
+   const size_x = 250;
+   const start_y = 75;
+   const text_why_size_y = 43;
+   const block_why_size_y = text_why_size_y + 7;
+   const elbow_y = 20;
+   const size_y = g_series_height + block_why_size_y + elbow_y;
+
+   for(let y = 0; y < g_novels_organization.length; ++y)
+   {
+      for(let x = 0; x < g_novels_organization[y].length; ++x)
+      {
+         let item_name = g_novels_organization[y][x];
+         
+         if(item_name != null)
+         {
+            const item = novels_map[item_name];
+            
+            let position = {};
+            position.x = (x - 1) * size_x + start_x;
+            position.y = y * size_y + start_y;
+
+            //alert(`${x},${y}|${position.x},${position.y}:${item_name}`);
+
+            const series_svg = draw_one_series_in_svg(item, position);
+            a_boxes.push(series_svg);
+
+            if(y > 0)
+            {
+               const why_text_svg =
+                  `<foreignObject x="${position.x - size_x / 2}" y="${position.y - (text_why_size_y + g_series_height / 2)}" width="${size_x}" height="${block_why_size_y}">`
+                  + `<div xmlns="http://www.w3.org/1999/xhtml" class="cssWhy">${item.why}</div>`
+                  + `</foreignObject>`;
+               a_boxes.push(why_text_svg);
+            }
+
+            const line_start_x = start_x;
+            const line_start_y = start_y;
+
+            const elbow_to_end_y = (g_series_height / 2) + block_why_size_y;
+
+            const line_first_elbow_x = line_start_x;
+            const line_first_elbow_y = position.y - elbow_to_end_y;
+
+            const line_second_elbow_x = position.x;
+            const line_second_elbow_y = line_first_elbow_y;
+
+            const line_end_x = line_second_elbow_x;
+            const line_end_y = position.y;
+
+/*
+            a_links.push(`<polyline class="cssArrow" points="`
+               , `${line_start_x},${line_start_y} `
+               , `${line_first_elbow_x},${line_first_elbow_y} `
+               , `${line_second_elbow_x},${line_second_elbow_y} `
+               , `${line_end_x},${line_end_y} `
+               , `" />`);
+*/  
+
+            if(y > 0)
+            {
+               //alert(`${line_start_x},${line_start_y} -> ${line_first_elbow_x},${line_first_elbow_y}`);
+               //alert(`${line_first_elbow_x},${line_first_elbow_y} -> ${line_second_elbow_x},${line_second_elbow_y}`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_start_x}" y1="${line_start_y}" x2="${line_first_elbow_x}" y2="${line_first_elbow_y}" />`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_first_elbow_x}" y1="${line_first_elbow_y}" x2="${line_second_elbow_x}" y2="${line_second_elbow_y}" />`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_second_elbow_x}" y1="${line_second_elbow_y}" x2="${line_end_x}" y2="${line_end_y}" />`);
+            }
+         }
+      }
+   }
+
+   let svg_output = id("ID_svg_output");
+   svg_output.innerHTML += a_links.join("") + a_boxes.join("");
+}
+
+window.addEventListener("load", (event) => {
+   test_print_organized_novels_list_in_svg();
+});
+
+</script>
+
+<script>
+
+
+
+function test_print_novels_list_in_svg()
+{
+   let a = [];
+
+   let context = {};
+   context.position = {};
+   context.position.x = 400;
+   context.position.y = 200;
+
+   g_novels_list.forEach(
+         (item) =>
+         {
+            let text = draw_one_series_in_svg(item, context.position);
+            a.push(text);
+            context.position.y += 150;
+         }
+      );
+
+   let svg_output = id("ID_svg_output");
+   svg_output.innerHTML += a.join("");
+}
+
+/*
+window.addEventListener("load", (event) => {
+   test_print_novels_list_in_svg();
+});
+*/
+</script>
+
+<script>
+
+function test_print_novels_list()
+{
+   let a = [];
+
+   a.push(`<ul>`);
+   g_novels_list.forEach(
+         (item) =>
+         {
+            a.push("<li>");
+            a.push("<div>", item["name"], "</div>");
+            a.push("<ol>")
+            let books_list = item["books"];
+            books_list.forEach(
+                  (item) =>
+                  {
+                     a.push("<li>", item["name"], "</li>");
+                  }
+               );
+            a.push("</ol>")
+            a.push("</li>");
+         }
+      );
+   a.push("</ul>");
+
+   let output = id("ID_output");
+   output.innerHTML = a.join("");
+}
+
+/*
+window.addEventListener("load", (event) => {
+   test_print_novels_list();
+});
+*/
+</script>
+
+
+<footer>
+   <p>
+      Author: Raoul 'Paercebal' Borges<br>
+      <a href="https://bsky.app/profile/paercebal.bsky.social">paercebal@bluesky</a><br />
+      <a href="./license.html">License</a>
+   </p>
+</footer>
+
+</body>
+</html>
