@@ -62,8 +62,14 @@ function draw_one_series_in_svg(p_series, p_position)
    a.push(`      <text x="${series_title_x}" y="${series_title_y}" dominant-baseline="middle" text-anchor="middle" class="cssSeries">${p_series.name}</text>`);
 */
 
+   let title_content = `<b>${p_series.name}</b>`;
 
-   a.push(create_svg_foreign_object(series_title_x, series_title_y, series_title_width, g_series_title_height, `<b>${p_series.name}</b>`, "cssSeriesTitle"));
+   if(Object.hasOwn(p_series, "wiki_link"))
+   {
+      title_content = `<a href="${p_series.wiki_link}" target="_blank">` + title_content + '</a>';
+   }
+
+   a.push(create_svg_foreign_object(series_title_x, series_title_y, series_title_width, g_series_title_height, title_content, "cssSeriesTitle"));
 
    for(let i = 0; i < p_series.books.length; ++i)
    {
@@ -71,9 +77,18 @@ function draw_one_series_in_svg(p_series, p_position)
       let book_x = book_start_x + (g_book_width * i) + (g_series_padding * (i + 1));
       let book_y = book_start_y;
       let image_url = `./covers/${book.name}.webp`;
+      const has_wiki_link = Object.hasOwn(book, "wiki_link");
       
-      a.push(`      <rect x="${book_x}" y="${book_y}" width="${g_book_width}" height="${g_book_height}" />`);
-      a.push(`      <image x="${book_x}" y="${book_y}" width="${g_book_width}" height="${g_book_height}" href="${image_url}" filter="url(#ID_BackgroundShadow)" />`);
+      //a.push(`      <rect x="${book_x}" y="${book_y}" width="${g_book_width}" height="${g_book_height}" />`);
+      if(has_wiki_link)
+      {
+         a.push(`<a href="${book.wiki_link}" target="_blank">`);
+      }
+      a.push(`<image x="${book_x}" y="${book_y}" width="${g_book_width}" height="${g_book_height}" href="${image_url}" filter="url(#ID_BackgroundShadow)" />`);
+      if(has_wiki_link)
+      {
+         a.push(`</a>`);
+      }
    }
 
    a.push(`   </g>`);
@@ -81,4 +96,91 @@ function draw_one_series_in_svg(p_series, p_position)
 
    return a.join("");
 }
+
+
+
+function draw_organized_series_in_svg(p_start_position)
+{
+   let a_boxes = [];
+   let a_links = [];
+
+   const novels_map = list_to_map(g_novels_list, "name");
+
+   //alert(JSON.stringify(novels_map));
+
+   const start_x = p_start_position.x;
+   const start_y = p_start_position.y;
+
+   const size_x = 250;
+   const text_why_size_y = 43;
+   const block_why_size_y = text_why_size_y + 7;
+   const elbow_y = 20;
+   const size_y = g_series_height + block_why_size_y + elbow_y;
+
+   for(let y = 0; y < g_novels_organization.length; ++y)
+   {
+      for(let x = 0; x < g_novels_organization[y].length; ++x)
+      {
+         let item_name = g_novels_organization[y][x];
+         
+         if(item_name != null)
+         {
+            const item = novels_map[item_name];
+            
+            let position = {};
+            position.x = (x - 1) * size_x + start_x;
+            position.y = y * size_y + start_y;
+
+            //alert(`${x},${y}|${position.x},${position.y}:${item_name}`);
+
+            const series_svg = draw_one_series_in_svg(item, position);
+            a_boxes.push(series_svg);
+
+            if(y > 0)
+            {
+               const why_text_svg = create_svg_foreign_object(position.x, (position.y - ((text_why_size_y + g_series_height) / 2)), size_x, text_why_size_y, item.why, "cssWhy");
+               a_boxes.push(why_text_svg);
+            }
+
+            const line_start_x = start_x;
+            const line_start_y = start_y;
+
+            const elbow_to_end_y = (g_series_height / 2) + block_why_size_y;
+
+            const line_first_elbow_x = line_start_x;
+            const line_first_elbow_y = position.y - elbow_to_end_y;
+
+            const line_second_elbow_x = position.x;
+            const line_second_elbow_y = line_first_elbow_y;
+
+            const line_end_x = line_second_elbow_x;
+            const line_end_y = position.y;
+
+/*
+            a_links.push(`<polyline class="cssArrow" points="`
+               , `${line_start_x},${line_start_y} `
+               , `${line_first_elbow_x},${line_first_elbow_y} `
+               , `${line_second_elbow_x},${line_second_elbow_y} `
+               , `${line_end_x},${line_end_y} `
+               , `" />`);
+*/  
+
+            if(y > 0)
+            {
+               //alert(`${line_start_x},${line_start_y} -> ${line_first_elbow_x},${line_first_elbow_y}`);
+               //alert(`${line_first_elbow_x},${line_first_elbow_y} -> ${line_second_elbow_x},${line_second_elbow_y}`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_start_x}" y1="${line_start_y}" x2="${line_first_elbow_x}" y2="${line_first_elbow_y}" />`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_first_elbow_x}" y1="${line_first_elbow_y}" x2="${line_second_elbow_x}" y2="${line_second_elbow_y}" />`);
+
+               a_links.push(`<line class="cssArrow" x1="${line_second_elbow_x}" y1="${line_second_elbow_y}" x2="${line_end_x}" y2="${line_end_y}" />`);
+            }
+         }
+      }
+   }
+   
+   return a_links.join("") + a_boxes.join("");
+}
+
 
