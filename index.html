@@ -48,6 +48,12 @@
    background : #FFFFFFA0;
 }
 
+.cssSeriesTitle
+{
+   text-align : center;
+   filter: drop-shadow(0px 0px 3px #FFFFFF);
+}
+
 .cssBackground
 {
    fill: #CCCCCC;
@@ -148,6 +154,8 @@ g.cssCareerFeat > text
       ]]></style>
    </defs>
 
+   <rect x="0" y="0" width="850" height="800" class="cssBackground" />
+
 
 </svg>
 
@@ -159,21 +167,8 @@ function test_print_organized_novels_list_in_svg()
 {
    let a_boxes = [];
    let a_links = [];
-   const list_to_map = (p_novels_list) =>
-      {
-         let map = {};
 
-         p_novels_list.forEach(
-               (p_item) =>
-               {
-                  map[p_item.name] = p_item;
-               }
-            );
-
-         return map;
-      };
-
-   const novels_map = list_to_map(g_novels_list);
+   const novels_map = list_to_map(g_novels_list, "name");
 
    //alert(JSON.stringify(novels_map));
 
@@ -206,10 +201,7 @@ function test_print_organized_novels_list_in_svg()
 
             if(y > 0)
             {
-               const why_text_svg =
-                  `<foreignObject x="${position.x - size_x / 2}" y="${position.y - (text_why_size_y + g_series_height / 2)}" width="${size_x}" height="${block_why_size_y}">`
-                  + `<div xmlns="http://www.w3.org/1999/xhtml" class="cssWhy">${item.why}</div>`
-                  + `</foreignObject>`;
+               const why_text_svg = create_svg_foreign_object(position.x, (position.y - ((text_why_size_y + g_series_height) / 2)), size_x, text_why_size_y, item.why, "cssWhy");
                a_boxes.push(why_text_svg);
             }
 
